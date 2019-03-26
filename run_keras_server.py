@@ -21,17 +21,30 @@ logger = mylogger.setup(logger, log_level=logging.DEBUG)
 
 app = flask.Flask(__name__)
 model = None
-MODEL_NAME = '20190227-234407_mobilenet_aug_oo_best_model'
+# MODEL_NAME = '20190227-234407_mobilenet_aug_oo_best_model.h5'
+MODEL_NAME = '20190227-234407_mobilenet_aug_oo_best_model_saved_model'
 
 graph = tf.get_default_graph()
 
 
-def load_oheyaobeya_model():
+def load_oheyaobeya_model(path: str):  # TODO
     global model
-    # 一番シンプルなモデル
-    model_name = MODEL_NAME + '.h5'
-    model_path = Path(__file__).parent / 'model' / model_name
-    model = load_model(str(model_path))
+
+    if Path(path).suffix == '.h5':
+        print('???????????????????????????')
+        print('???????????????????????????')
+        print('???????????????????????????')
+
+        model = load_model(path)
+    else:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        # SavedModel
+        # MobileNetが読み込めないKerasの不具合に対応するための処理
+        # https://github.com/tensorflow/tensorflow/issues/22697
+        model = tf.contrib.saved_model.load_keras_model(path)
+        print(model.summary())
 
 
 def preprocess(image, img_shape: Tuple[int]) -> np.ndarray:
@@ -94,7 +107,8 @@ def predict():
 
 if __name__ == '__main__':
     print(('Loading Keras model ...'))
-    load_oheyaobeya_model()
+    model_path = Path(__file__).parent / 'model' / MODEL_NAME
+    load_oheyaobeya_model(str(model_path))
     app.debug = True
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
